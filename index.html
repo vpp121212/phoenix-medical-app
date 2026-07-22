@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مجمع فينكس الطبي - المعاينة</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { primary: { DEFAULT: '#2E7D32', light: '#4CAF50', dark: '#1B5E20' }, accent: '#FF6F00' } } } }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+    * { font-family: 'Tajawal', sans-serif; direction: rtl; }
+    body { background: #f5f5f5; }
+    ::-webkit-scrollbar { display: none; }
+    .card { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .gradient-bg { background: linear-gradient(135deg, #2E7D32, #4CAF50); }
+    .nav-active { color: #2E7D32; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // SVG Icons Component
+    const Icon = ({ name, size = 24, className = '' }) => {
+      const icons = {
+        home: '<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>',
+        calendar: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+        doctor: '<path d="M19 21v-2a4 4 0 00-4-4H9a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+        user: '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+        star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+        clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+        search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+        hospital: '<path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16"/><path d="M13 21v-4h-2v4"/><rect x="9" y="9" width="1" height="1"/><rect x="14" y="9" width="1" height="1"/><rect x="9" y="13" width="1" height="1"/><rect x="14" y="13" width="1" height="1"/>',
+        arrowLeft: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+        bell: '<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>',
+        fileText: '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+        logout: '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+        shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+        globe: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>',
+        location: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',
+        info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+      };
+      return React.createElement('svg', {
+        xmlns: 'http://www.w3.org/2000/svg', width: size, height: size, viewBox: '0 0 24 24',
+        fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round',
+        className, dangerouslySetInnerHTML: { __html: icons[name] || icons.home }
+      });
+    };
+
+    // Mock data
+    const doctors = [
+      { id: 1, name: 'د. أحمد السالم', spec: 'قلب', rating: 4.8, reviews: 142, fee: 250, available: true, bio: 'استشاري أمراض القلب بمستشفى الملك فيصل. خبرة 20 عامًا في جراحات القلب المفتوح.' },
+      { id: 2, name: 'د. نورة العتيبي', spec: 'أطفال', rating: 4.9, reviews: 98, fee: 180, available: true, bio: 'استشارية طب الأطفال وحديثي الولادة. زميل الكلية الملكية البريطانية.' },
+      { id: 3, name: 'د. سعد القحطاني', spec: 'عظام', rating: 4.7, reviews: 115, fee: 220, available: false, bio: 'استشاري جراحة العظام والمفاصل.' },
+      { id: 4, name: 'د. مها الشمري', spec: 'جلدية', rating: 4.6, reviews: 87, fee: 200, available: true, bio: 'استشارية أمراض الجلدية والتجميل.' },
+      { id: 5, name: 'د. فيصل الدوسري', spec: 'عيون', rating: 4.8, reviews: 134, fee: 250, available: true, bio: 'استشاري جراحة العيون وتصحيح النظر.' },
+    ];
+
+    const news = [
+      { id: 1, title: 'افتتاح قسم جديد للعناية المركزة', body: 'يسر مجمع فينكس الطبي الإعلان عن افتتاح قسم العناية المركزة الجديد بأحدث التجهيزات العالمية', date: '20 يوليو 2026' },
+      { id: 2, title: 'حملة التوعية بمرض السكري', body: 'ينظم المجمع حملة توعوية شاملة للكشف المبكر عن مرض السكري طوال شهر أغسطس', date: '15 يوليو 2026' },
+      { id: 3, title: 'انضمام نخبة جديدة من الأطباء', body: 'يسعدنا الإعلان عن انضمام نخبة من الأطباء الاستشاريين في تخصصات القلب والعظام والأطفال', date: '10 يوليو 2026' },
+    ];
+
+    const times = ['09:00 صباحاً', '09:30 صباحاً', '10:00 صباحاً', '10:30 صباحاً', '11:00 صباحاً', '12:00 ظهراً', '04:00 مساءً', '04:30 مساءً', '05:00 مساءً', '05:30 مساءً', '06:00 مساءً'];
+
+    // Splash Screen
+    const Splash = ({ onDone }) => {
+      useEffect(() => { const t = setTimeout(onDone, 2000); return () => clearTimeout(t); }, []);
+      return (
+        <div className="min-h-screen gradient-bg flex flex-col items-center justify-center text-white">
+          <div className="w-28 h-28 bg-white rounded-3xl flex items-center justify-center mb-6">
+            <Icon name="hospital" size={56} className="text-[#2E7D32]" />
+          </div>
+          <h1 className="text-3xl font-bold mb-2">مجمع فينكس الطبي</h1>
+          <p className="text-white/70 text-lg">صحتك تهمنا</p>
+        </div>
+      );
+    };
+
+    // Main App
+    const App = () => {
+      const [page, setPage] = useState('splash');
+      const [selectedDoctor, setSelectedDoctor] = useState(null);
+      const [history, setHistory] = useState(['home']);
+
+      const nav = (p) => { setHistory(prev => [...prev, p]); setPage(p); };
+      const back = () => {
+        if (history.length > 1) {
+          const h = [...history]; h.pop();
+          setPage(h[h.length - 1]); setHistory(h);
+        }
+      };
+
+      const pages = {
+        home: <HomePage onNavigate={nav} />,
+        doctors: <DoctorsPage onNavigate={nav} onSelect={setSelectedDoctor} />,
+        doctorDetail: <DoctorDetail doc={selectedDoctor} onNavigate={nav} />,
+        book: <BookAppointment doc={selectedDoctor} onBack={() => nav('home')} />,
+        appointments: <AppointmentsPage />,
+        news: <NewsPage />,
+        profile: <ProfilePage onLogout={() => nav('home')} />,
+      };
+
+      if (page === 'splash') return <Splash onDone={() => { setPage('home'); setHistory(['home']); }} />;
+
+      const showBack = page !== 'home' && page !== 'splash';
+      const titles = { doctors: 'الأطباء', doctorDetail: 'تفاصيل الطبيب', book: 'حجز موعد', appointments: 'مواعيدي', news: 'الأخبار', profile: 'حسابي' };
+
+      return (
+        <div className="max-w-md mx-auto min-h-screen relative" style={{ maxWidth: '480px' }}>
+          {showBack && (
+            <div className="bg-white sticky top-0 z-10 px-4 py-3 flex items-center gap-3 border-b">
+              <button onClick={back} className="text-gray-600"><Icon name="arrowLeft" size={24}/></button>
+              <h1 className="font-bold text-lg">{titles[page] || ''}</h1>
+            </div>
+          )}
+          {pages[page] || <HomePage onNavigate={nav} />}
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 max-w-md mx-auto z-20" style={{ maxWidth: '480px' }}>
+            {[
+              { icon: 'home', label: 'الرئيسية', pg: 'home' },
+              { icon: 'doctor', label: 'الأطباء', pg: 'doctors' },
+              { icon: 'calendar', label: 'مواعيدي', pg: 'appointments' },
+              { icon: 'user', label: 'حسابي', pg: 'profile' },
+            ].map((item, i) => (
+              <button key={i} onClick={() => nav(item.pg)} className={`flex flex-col items-center gap-1 text-xs ${page === item.pg ? 'text-[#2E7D32]' : 'text-gray-400'}`}>
+                <Icon name={item.icon} size={22}/><span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // Home Page
+    const HomePage = ({ onNavigate }) => (
+      <div className="p-4 pb-24">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-lg">م</div>
+          <div><h2 className="text-lg font-bold">مرحباً، معاذ</h2><p className="text-sm text-gray-500">نتمنى لك دوام الصحة والعافية</p></div>
+        </div>
+        <div className="gradient-bg rounded-2xl p-6 text-white mb-6">
+          <h3 className="text-xl font-bold mb-2">مجمع فينكس الطبي</h3>
+          <p className="text-white/70 mb-4">أكبر مجمع طبي متكامل بخدمات عالمية</p>
+          <button onClick={() => onNavigate('doctors')} className="w-full bg-white text-[#2E7D32] font-bold py-3 rounded-xl flex items-center justify-center gap-2">
+            <Icon name="calendar" size={18}/> احجز موعد الآن
+          </button>
+        </div>
+        <h3 className="text-lg font-bold mb-4">خدماتنا</h3>
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          {[
+            { icon: 'doctor', label: 'الأطباء', color: '#1565C0', onClick: () => onNavigate('doctors') },
+            { icon: 'calendar', label: 'المواعيد', color: '#2E7D32', onClick: () => onNavigate('appointments') },
+            { icon: 'bell', label: 'الأخبار', color: '#E65100', onClick: () => onNavigate('news') },
+            { icon: 'location', label: 'الموقع', color: '#6A1B9A' },
+          ].map((a, i) => (
+            <div key={i} className="flex flex-col items-center gap-2 cursor-pointer" onClick={a.onClick}>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: a.color + '20' }}>
+                <Icon name={a.icon} size={24} style={{ color: a.color }} />
+              </div>
+              <span className="text-xs text-center">{a.label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold">الأطباء المميزون</h3>
+          <button onClick={() => onNavigate('doctors')} className="text-[#2E7D32] text-sm font-bold">عرض الكل</button>
+        </div>
+        <div className="flex gap-4 overflow-x-auto pb-2">
+          {doctors.slice(0, 4).map(d => (
+            <div key={d.id} className="card min-w-[140px] flex-shrink-0 cursor-pointer" onClick={() => onNavigate('doctors')}>
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2"><Icon name="doctor" size={28} className="text-[#2E7D32]"/></div>
+              <p className="font-bold text-center text-sm">{d.name}</p>
+              <p className="text-gray-500 text-xs text-center">{d.spec}</p>
+              <div className="flex items-center justify-center gap-1 mt-2 text-amber-500"><Icon name="star" size={14}/><span className="text-xs">{d.rating}</span></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+
+    // Doctors Page
+    const DoctorsPage = ({ onNavigate, onSelect }) => {
+      const [search, setSearch] = useState('');
+      const [spec, setSpec] = useState('الكل');
+      const specs = ['الكل', ...new Set(doctors.map(d => d.spec))];
+      const filtered = doctors.filter(d => (spec === 'الكل' || d.spec === spec) && (d.name.includes(search) || d.spec.includes(search)));
+      return (
+        <div className="p-4 pb-24">
+          <div className="relative mb-4">
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"><Icon name="search" size={20}/></div>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="ابحث عن دكتور..." className="w-full bg-white rounded-xl py-3 pr-12 pl-4 text-sm shadow-sm" />
+          </div>
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+            {specs.map(s => (
+              <button key={s} onClick={() => setSpec(s)} className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${spec === s ? 'bg-[#2E7D32] text-white' : 'bg-gray-100 text-gray-700'}`}>{s}</button>
+            ))}
+          </div>
+          <div className="space-y-3">
+            {filtered.map(d => (
+              <div key={d.id} className="card flex items-center gap-4 cursor-pointer" onClick={() => { onSelect(d); onNavigate('doctorDetail'); }}>
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0"><Icon name="doctor" size={28} className="text-[#2E7D32]"/></div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold">{d.name}</p>
+                  <p className="text-gray-500 text-sm">{d.spec}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center text-amber-500 text-xs"><Icon name="star" size={14}/>{d.rating}</div>
+                    <span className="text-gray-400 text-xs">({d.reviews} تقييم)</span>
+                  </div>
+                </div>
+                <div className="text-left">
+                  <span className={`text-xs px-2 py-1 rounded-lg ${d.available ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>{d.available ? 'متاح' : 'غير متاح'}</span>
+                  <p className="text-[#2E7D32] font-bold mt-2">{d.fee} ر.س</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // Doctor Detail
+    const DoctorDetail = ({ doc, onNavigate }) => {
+      if (!doc) return null;
+      return (
+        <div className="pb-24">
+          <div className="bg-white p-6 text-center">
+            <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4"><Icon name="doctor" size={48} className="text-[#2E7D32]"/></div>
+            <h2 className="text-2xl font-bold">{doc.name}</h2>
+            <span className="inline-block bg-primary/10 text-[#2E7D32] px-4 py-1 rounded-full text-sm font-bold mt-2">{doc.spec}</span>
+            <div className="flex items-center justify-center gap-2 mt-3">
+              <Icon name="star" size={20} className="text-amber-500"/><span className="text-lg font-bold">{doc.rating}</span><span className="text-gray-500">({doc.reviews} تقييم)</span>
+            </div>
+            <p className="text-[#2E7D32] text-xl font-bold mt-2">{doc.fee} ر.س</p>
+          </div>
+          <div className="p-4">
+            <h3 className="font-bold mb-2">عن الطبيب</h3>
+            <p className="text-gray-500 leading-relaxed">{doc.bio}</p>
+          </div>
+          <div className="px-4">
+            <button onClick={() => onNavigate('book')} className="w-full bg-[#2E7D32] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+              <Icon name="calendar" size={18}/> احجز موعد
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    // Book Appointment
+    const BookAppointment = ({ doc, onBack }) => {
+      const [time, setTime] = useState('');
+      const [done, setDone] = useState(false);
+      if (done) return (
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><Icon name="calendar" size={40} className="text-green-600"/></div>
+            <h2 className="text-2xl font-bold mb-2">تم حجز الموعد بنجاح</h2>
+            <p className="text-gray-500 mb-6">سيصلك تذكير بالموعد قبل 24 ساعة</p>
+            <button onClick={onBack} className="bg-[#2E7D32] text-white px-8 py-3 rounded-xl font-bold">العودة للرئيسية</button>
+          </div>
+        </div>
+      );
+      return (
+        <div className="pb-24">
+          {doc && <div className="card flex items-center gap-3 mx-4 mt-4 mb-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center"><Icon name="doctor" size={24} className="text-[#2E7D32]"/></div>
+            <div className="flex-1"><p className="font-bold">{doc.name}</p><p className="text-gray-500 text-sm">{doc.spec}</p></div>
+            <p className="text-[#2E7D32] font-bold">{doc.fee} ر.س</p>
+          </div>}
+          <div className="px-4 mb-4">
+            <label className="block font-bold mb-2">اختر التاريخ</label>
+            <input type="date" defaultValue={new Date().toISOString().split('T')[0]} min={new Date().toISOString().split('T')[0]} className="w-full bg-white rounded-xl p-3 text-sm shadow-sm" />
+          </div>
+          <div className="px-4 mb-4">
+            <label className="block font-bold mb-2">اختر الوقت</label>
+            <div className="flex flex-wrap gap-2">{times.map(t => (
+              <button key={t} onClick={() => setTime(t)} className={`px-4 py-2 rounded-xl text-sm font-medium ${time === t ? 'bg-[#2E7D32] text-white' : 'bg-gray-100 text-gray-700'}`}>{t}</button>
+            ))}</div>
+          </div>
+          <div className="px-4">
+            <button onClick={() => setDone(true)} className="w-full bg-[#2E7D32] text-white py-3 rounded-xl font-bold">تأكيد الحجز</button>
+          </div>
+        </div>
+      );
+    };
+
+    // Appointments Page
+    const AppointmentsPage = () => {
+      const [tab, setTab] = useState('upcoming');
+      const upcoming = [
+        { id: 1, name: 'د. أحمد السالم', spec: 'قلب', date: '25 يوليو 2026', time: '10:00 صباحاً', status: 'pending' },
+        { id: 2, name: 'د. نورة العتيبي', spec: 'أطفال', date: '10 أغسطس 2026', time: '04:30 مساءً', status: 'confirmed' },
+      ];
+      const past = [{ id: 3, name: 'د. سعد القحطاني', spec: 'عظام', date: '15 يوليو 2026', time: '11:00 صباحاً', status: 'completed' }];
+      const list = tab === 'upcoming' ? upcoming : past;
+      const statusBadge = (s) => {
+        const m = { pending: { bg: 'bg-amber-50', text: 'text-amber-600', label: 'قيد الانتظار' }, confirmed: { bg: 'bg-green-50', text: 'text-green-600', label: 'مؤكد' }, completed: { bg: 'bg-blue-50', text: 'text-blue-600', label: 'مكتمل' } };
+        const c = m[s] || m.pending;
+        return <span className={`${c.bg} ${c.text} text-xs px-2 py-1 rounded-lg font-bold`}>{c.label}</span>;
+      };
+      return (
+        <div className="pb-24">
+          <div className="bg-white flex border-b">
+            {['upcoming', 'past'].map(t => (
+              <button key={t} onClick={() => setTab(t)} className={`flex-1 py-3 text-center font-bold text-sm ${tab === t ? 'text-[#2E7D32] border-b-2 border-[#2E7D32]' : 'text-gray-500'}`}>{t === 'upcoming' ? 'المواعيد القادمة' : 'المواعيد السابقة'}</button>
+            ))}
+          </div>
+          {list.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+              <Icon name="calendar" size={64}/><p className="mt-4">{tab === 'upcoming' ? 'لا توجد مواعيد قادمة' : 'لا توجد مواعيد سابقة'}</p>
+            </div>
+          ) : (
+            <div className="p-4 space-y-3">{list.map(a => (
+              <div key={a.id} className="card">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center"><Icon name="doctor" size={24} className="text-[#2E7D32]"/></div>
+                  <div className="flex-1"><p className="font-bold text-sm">{a.name}</p><p className="text-gray-500 text-xs">{a.spec}</p></div>
+                  {statusBadge(a.status)}
+                </div>
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <div className="flex items-center gap-1"><Icon name="calendar" size={16}/>{a.date}</div>
+                  <div className="flex items-center gap-1"><Icon name="clock" size={16}/>{a.time}</div>
+                </div>
+              </div>
+            ))}</div>
+          )}
+        </div>
+      );
+    };
+
+    // Profile Page
+    const ProfilePage = ({ onLogout }) => (
+      <div className="p-4 pb-24">
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-20 h-20 bg-[#2E7D32] rounded-full flex items-center justify-center text-white font-bold text-3xl mb-4">م</div>
+          <h2 className="text-xl font-bold">معاذ</h2>
+          <p className="text-gray-500">+966 5XXXXXXXX</p>
+        </div>
+        <div className="card divide-y mb-4">
+          {[
+            { icon: 'user', label: 'البيانات الشخصية' },
+            { icon: 'fileText', label: 'التقارير الطبية' },
+            { icon: 'calendar', label: 'الفواتير' },
+            { icon: 'bell', label: 'الإشعارات', badge: '3' },
+            { icon: 'shield', label: 'سياسة الخصوصية' },
+          ].map((item, i) => (
+            <div key={i} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0 cursor-pointer">
+              <Icon name={item.icon} size={20} className="text-[#2E7D32]"/><span className="flex-1 text-sm font-medium">{item.label}</span>
+              {item.badge && <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{item.badge}</span>}
+              <Icon name="arrowLeft" size={16} className="text-gray-400"/>
+            </div>
+          ))}
+        </div>
+        <div className="card divide-y mb-6">
+          {[
+            { icon: 'globe', label: 'English', desc: 'العربية' },
+          ].map((item, i) => (
+            <div key={i} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0 cursor-pointer">
+              <Icon name={item.icon} size={20} className="text-[#2E7D32]"/><span className="flex-1 text-sm font-medium">{item.label}</span>
+              {item.desc && <span className="text-gray-400 text-sm">{item.desc}</span>}
+              <Icon name="arrowLeft" size={16} className="text-gray-400"/>
+            </div>
+          ))}
+        </div>
+        <button onClick={onLogout} className="w-full bg-red-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+          <Icon name="logout" size={18}/> تسجيل الخروج
+        </button>
+      </div>
+    );
+
+    // News Page
+    const NewsPage = () => (
+      <div className="p-4 pb-24 space-y-4">
+        {news.map(n => (
+          <div key={n.id} className="card">
+            <div className="w-full h-40 bg-primary/10 rounded-xl flex items-center justify-center mb-3"><Icon name="hospital" size={48} className="text-[#2E7D32]"/></div>
+            <h3 className="font-bold text-lg mb-2">{n.title}</h3>
+            <p className="text-gray-500 text-sm leading-relaxed mb-2">{n.body}</p>
+            <p className="text-gray-400 text-xs">{n.date}</p>
+          </div>
+        ))}
+      </div>
+    );
+
+    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+  </script>
+</body>
+</html>
